@@ -1,0 +1,173 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+// ============================================
+// Smart Discount Analyzer Models
+// ============================================
+
+model Shop {
+  id                String   @id @default(uuid())
+  shopDomain        String   @unique
+  defaultMargin     Float?   @default(30) // Default margin percentage if cost not available
+  currency          String   @default("PLN")
+  lastSyncAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  discountAnalyses         DiscountAnalysis[]
+  productPerformances      ProductDiscountPerformance[]
+  recommendations          Recommendation[]
+  syncLogs                 SyncLog[]
+}
+
+model DiscountAnalysis {
+  id              String   @id @default(uuid())
+  shopId          String
+  shop            Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  
+  discountCode    String
+  discountType    String   // 'percentage', 'fixed_amount', 'buy_x_get_y'
+  discountValue   Float    // percentage or fixed amount
+  
+  startDate       DateTime
+  endDate         DateTime?
+  
+  totalOrders     Int      @default(0)
+  totalRevenue    Float    @default(0)
+  totalCost       Float    @default(0)
+  totalProfit     Float    @default(0)
+  totalDiscount   Float    @default(0) // Total discount amount given
+  
+  avgOrderValue   Float    @default(0)
+  conversionRate  Float?   // if available from analytics
+  
+  roiPercentage   Float?   // Calculated ROI
+  isProfitable    Boolean  @default(false)
+  profitabilityScore Int   @default(0) // 1-100 score
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  productPerformances ProductDiscountPerformance[]
+
+  @@index([shopId])
+  @@index([discountCode])
+}
+
+model ProductDiscountPerformance {
+  id                      String   @id @default(uuid())
+  shopId                  String
+  shop                    Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  
+  discountAnalysisId      String?
+  discountAnalysis        DiscountAnalysis? @relation(fields: [discountAnalysisId], references: [id], onDelete: SetNull)
+  
+  shopifyProductId        String   // Shopify product GID
+  productTitle            String
+  productCategory         String?
+  
+  // Pricing data
+  regularPrice            Float
+  costPerItem             Float?   // May be null if not set in Shopify
+  margin                  Float?   // Calculated or default margin
+  
+  // Sales comparison
+  unitsSoldWithDiscount      Int   @default(0)
+  unitsSoldWithoutDiscount   Int   @default(0) // comparison period
+  revenueWithDiscount        Float @default(0)
+  revenueWithoutDiscount     Float @default(0)
+  profitWithDiscount         Float @default(0)
+  profitWithoutDiscount      Float @default(0)
+  
+  // Calculated metrics
+  recommendedDiscountLevel   Float? // Suggested optimal discount %
+  breakevenMultiplier        Float? // How many more units needed to break even
+  priceElasticity            Float? // Estimated price elasticity
+  profitabilityScore         Int    @default(0) // 1-100
+  
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([shopId])
+  @@index([shopifyProductId])
+  @@index([discountAnalysisId])
+}
+
+model Recommendation {
+  id                        String   @id @default(uuid())
+  shopId                    String
+  shop                      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  
+  shopifyProductId          String
+  productTitle              String
+  
+  recommendationType        String   // 'increase', 'decrease', 'remove', 'maintain', 'avoid'
+  suggestedDiscountPercent  Float?
+  expectedRoi               Float?
+  confidenceLevel           Float    @default(0.5) // 0-1
+  
+  reasoning                 String?  // Why this recommendation
+  isActive                  Boolean  @default(true)
+  isApplied                 Boolean  @default(false)
+  appliedAt                 DateTime?
+  
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([shopId])
+  @@index([shopifyProductId])
+  @@index([isActive])
+}
+
+model SyncLog {
+  id            String   @id @default(uuid())
+  shopId        String
+  shop          Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  
+  syncType      String   // 'full', 'incremental', 'orders', 'products', 'discounts'
+  status        String   // 'pending', 'in_progress', 'completed', 'failed'
+  
+  ordersProcessed   Int  @default(0)
+  productsProcessed Int  @default(0)
+  discountsProcessed Int @default(0)
+  
+  errorMessage  String?
+  startedAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  @@index([shopId])
+  @@index([status])
+}
+

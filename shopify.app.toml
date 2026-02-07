@@ -1,0 +1,40 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "24b5ceb6e01a494cc412424ae447790f"
+name = "smart-discount-analyzer"
+application_url = "https://example.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+
+[webhooks]
+api_version = "2026-04"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/uninstalled" ]
+  uri = "/webhooks/app/uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = [ "app/scopes_update" ]
+  uri = "/webhooks/app/scopes_update"
+
+  # Note: orders/create and orders/updated webhooks require protected customer data approval
+  # For development, we use polling instead. Enable these after App Store approval.
+  # [[webhooks.subscriptions]]
+  # topics = [ "orders/create" ]
+  # uri = "/webhooks/orders/create"
+
+  [[webhooks.subscriptions]]
+  topics = [ "products/update" ]
+  uri = "/webhooks/products/update"
+
+[access_scopes]
+# Required scopes for Smart Discount Analyzer
+scopes = "read_orders,read_products,read_discounts,read_price_rules,read_inventory"
+
+[auth]
+redirect_urls = [ "https://example.com/api/auth" ]
+
+
