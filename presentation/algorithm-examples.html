@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discount Intelligence – Weryfikacja algorytmów</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #1a1a1f;
+      --text: #e8e6e3;
+      --muted: #8b8685;
+      --accent: #7c3aed;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --critical: #f87171;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 2rem 3rem; }
+    h1 { font-size: 1.75rem; margin-bottom: 1rem; color: #fff; }
+    h2 { font-size: 1.25rem; margin: 1.5rem 0 0.5rem; color: var(--accent); }
+    p, li { color: var(--muted); margin-bottom: 0.5rem; }
+    .slide { max-width: 900px; margin: 0 auto 3rem; padding: 1.5rem 0; border-bottom: 1px solid var(--surface); }
+    table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 0.5rem 0.75rem; border: 1px solid var(--surface); }
+    th { color: var(--muted); font-weight: 600; }
+    .in { font-family: 'JetBrains Mono', monospace; background: var(--surface); padding: 0.2rem 0.4rem; border-radius: 4px; }
+    .out { font-weight: 600; color: var(--success); }
+    .out.avoid { color: var(--critical); }
+    .out.decrease { color: var(--warning); }
+    .out.maintain { color: #93c5fd; }
+    .rule { background: var(--surface); padding: 0.75rem 1rem; border-radius: 8px; margin: 0.5rem 0; border-left: 4px solid var(--accent); }
+    .formula { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--muted); margin: 0.5rem 0; }
+  </style>
+</head>
+<body>
+
+  <div class="slide">
+    <h1>Discount Intelligence – Weryfikacja algorytmów</h1>
+    <p>Prezentacja przykładowych danych wejściowych i wyników zgodnych z zaimplementowaną logiką. Testy automatyczne w <code>app/services/__tests__/discount-analyzer.test.js</code> sprawdzają te same przypadki.</p>
+  </div>
+
+  <div class="slide">
+    <h1>Rekomendacje produktowe – progi decyzyjne</h1>
+    <p>Wejście: <span class="in">historicalROI</span> (wynik ze wskaźnika rentowności −50), <span class="in">currentMargin</span>, <span class="in">priceElasticity</span>, <span class="in">lastDiscountLevel</span>.</p>
+    <table>
+      <thead>
+        <tr><th>Warunek</th><th>Rekomendacja</th><th>Sugerowany rabat</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>historicalROI &lt; −20</td><td><strong>avoid</strong> (unikaj)</td><td>0%</td></tr>
+        <tr><td>historicalROI &lt; 0 (ale ≥ −20)</td><td><strong>decrease</strong> (zmniejsz)</td><td>lastDiscountLevel − 5%</td></tr>
+        <tr><td>0 ≤ historicalROI ≤ 50</td><td><strong>maintain</strong> (utrzymaj)</td><td>lastDiscountLevel</td></tr>
+        <tr><td>historicalROI &gt; 50 <em>i</em> priceElasticity &gt; 1,5</td><td><strong>increase</strong> (zwiększ)</td><td>min(lastDiscountLevel + 5%, 50% marży)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="slide">
+    <h2>Przykład 1: Unikaj rabatów</h2>
+    <p>Dane: marża 30%, historyczny ROI &lt; −20 (produkt przy rabatach traci), ostatni rabat 15%.</p>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>currentMargin</td><td>30</td></tr>
+      <tr><td>historicalROI</td><td>−25</td></tr>
+      <tr><td>lastDiscountLevel</td><td>15</td></tr>
+    </table>
+    <p><strong>Wynik algorytmu:</strong> <span class="out avoid">recommendationType = "avoid"</span>, <span class="in">suggestedDiscountPercent = 0</span>, reasoning: „Rabaty na ten produkt przynoszą straty. Zalecane unikanie rabatów.”</p>
+  </div>
+
+  <div class="slide">
+    <h2>Przykład 2: Zmniejsz rabat</h2>
+    <p>Dane: historyczny ROI ujemny, ale łagodny (−20 &lt; ROI &lt; 0), ostatni rabat 15%.</p>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>currentMargin</td><td>30</td></tr>
+      <tr><td>historicalROI</td><td>−10</td></tr>
+      <tr><td>lastDiscountLevel</td><td>15</td></tr>
+    </table>
+    <p><strong>Wynik algorytmu:</strong> <span class="out decrease">recommendationType = "decrease"</span>, <span class="in">suggestedDiscountPercent = 10</span> (15 − 5), reasoning: „Obecny poziom rabatu jest nierentowny. Zalecane zmniejszenie.”</p>
+  </div>
+
+  <div class="slide">
+    <h2>Przykład 3: Utrzymaj rabat</h2>
+    <p>Dane: historyczny ROI umiarkowanie dodatni (0–50%), ostatni rabat 10%.</p>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>currentMargin</td><td>30</td></tr>
+      <tr><td>historicalROI</td><td>20</td></tr>
+      <tr><td>lastDiscountLevel</td><td>10</td></tr>
+    </table>
+    <p><strong>Wynik algorytmu:</strong> <span class="out maintain">recommendationType = "maintain"</span>, <span class="in">suggestedDiscountPercent = 10</span>, reasoning: „Obecny poziom rabatu jest umiarkowanie opłacalny.”</p>
+  </div>
+
+  <div class="slide">
+    <h2>Przykład 4: Zwiększ rabat</h2>
+    <p>Dane: wysoki historyczny ROI (&gt; 50%) i elastyczność cenowa &gt; 1,5. Reguła: sugerowany rabat ≤ 50% marży.</p>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>currentMargin</td><td>40</td></tr>
+      <tr><td>historicalROI</td><td>60</td></tr>
+      <tr><td>priceElasticity</td><td>2</td></tr>
+      <tr><td>lastDiscountLevel</td><td>10</td></tr>
+    </table>
+    <p><strong>Wynik algorytmu:</strong> <span class="out">recommendationType = "increase"</span>, <span class="in">suggestedDiscountPercent = 15</span> (min(10+5, 40×0,5) = min(15, 20)), reasoning: „Wysoka elastyczność cenowa i pozytywny ROI wskazują na potencjał zwiększenia rabatu.”</p>
+  </div>
+
+  <div class="slide">
+    <h1>Breakeven (próg rentowności)</h1>
+    <p>Mnożnik = marża pełna / marża po rabacie. Odpowiada na pytanie: „O ile procent więcej sztuk muszę sprzedać, żeby zrekompensować spadek marży?”.</p>
+    <div class="formula">regularMargin = 100 − 50 = 50 PLN; discountedPrice = 100 × 0,9 = 90; discountedMargin = 40 → multiplier = 50/40 = 1,25</div>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>regularPrice</td><td>100 PLN</td></tr>
+      <tr><td>cost</td><td>50 PLN</td></tr>
+      <tr><td>discountPercent</td><td>10%</td></tr>
+      <tr><td><strong>Wynik</strong></td><td><strong>1,25</strong> (trzeba sprzedać 25% więcej sztuk)</td></tr>
+    </table>
+    <p>Gdy marża po rabacie ≤ 0 (np. koszt 90, cena 100, rabat 10%), algorytm zwraca <strong>Infinity</strong> – rabat nigdy nie będzie opłacalny.</p>
+  </div>
+
+  <div class="slide">
+    <h1>ROI rabatu (kampania)</h1>
+    <p>Porównanie zysku z rabatem vs. baseline (sprzedaż bez rabatu). ROI = (additionalProfit / totalLostMargin) × 100. Opłacalne, gdy additionalProfit &gt; 0.</p>
+    <h2>Przykład opłacalny</h2>
+    <table>
+      <tr><th>Wejście</th><th>Wartość</th></tr>
+      <tr><td>salesWithDiscount / salesWithoutDiscount</td><td>20 / 10</td></tr>
+      <tr><td>regularPrice / discountedPrice / cost</td><td>100 / 90 / 50 PLN</td></tr>
+    </table>
+    <p>Zysk bez rabatu: 10 × 50 = 500. Zysk z rabatem: 20 × 40 = 800. Dodatkowy zysk = 300. Utracona marża = 200. <strong>ROI = 150%</strong>, <strong>isProfitable = true</strong>, profitabilityScore = 100.</p>
+    <h2>Przykład nieopłacalny</h2>
+    <p>salesWithDiscount = salesWithoutDiscount = 10, discountedPrice = 80 → zysk z rabatem 10×30 = 300, bez 10×50 = 500. <strong>additionalProfit &lt; 0</strong> → isProfitable = false, profitabilityScore ≤ 50.</p>
+  </div>
+
+  <div class="slide">
+    <h1>Testy automatyczne</h1>
+    <p>Plik <code>app/services/__tests__/discount-analyzer.test.js</code> zawiera testy weryfikujące:</p>
+    <ul>
+      <li>Dokładne wartości breakeven (np. 1,25 i Infinity dla skrajnych przypadków).</li>
+      <li>Typ rekomendacji i sugerowany % dla każdego progu (avoid, decrease, maintain, increase).</li>
+      <li>Znak i zakres profitabilityScore oraz isProfitable dla ROI.</li>
+    </ul>
+    <p>Uruchomienie: <code>npm run test</code></p>
+  </div>
+
+</body>
+</html>

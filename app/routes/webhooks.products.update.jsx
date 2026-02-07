@@ -3,8 +3,8 @@
  * Triggered when a product is updated (price, cost changes)
  */
 
-import { authenticate } from "../../shopify.server";
-import prisma from "../../db.server";
+import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
 
 export const action = async ({ request }) => {
     const { topic, shop, payload } = await authenticate.webhook(request);

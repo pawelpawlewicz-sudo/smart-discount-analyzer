@@ -30,9 +30,22 @@ api_version = "2026-04"
   topics = [ "products/update" ]
   uri = "/webhooks/products/update"
 
+  # Mandatory GDPR compliance (required for App Store)
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/compliance/customers/data_request"
+  compliance_topics = [ "customers/data_request" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/compliance/customers/redact"
+  compliance_topics = [ "customers/redact" ]
+
+  [[webhooks.subscriptions]]
+  uri = "/webhooks/compliance/shop/redact"
+  compliance_topics = [ "shop/redact" ]
+
 [access_scopes]
 # Required scopes for Smart Discount Analyzer
-scopes = "read_orders,read_products,read_discounts,read_price_rules,read_inventory"
+scopes = "read_orders,read_products,read_discounts,read_price_rules,read_inventory,write_discounts"
 
 [auth]
 redirect_urls = [ "https://example.com/api/auth" ]

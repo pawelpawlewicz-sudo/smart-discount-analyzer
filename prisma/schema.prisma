@@ -5,12 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
-// enough when changing adapters.
-// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+// Production: use PostgreSQL (Railway, Neon, etc.) — set DATABASE_URL.
+// Local dev: use SQLite (default) or Postgres. See docs/DEPLOY-RAILWAY.md.
 datasource db {
-  provider = "sqlite"
-  url      = "file:dev.sqlite"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Session {
@@ -42,6 +41,7 @@ model Shop {
   shopDomain        String   @unique
   defaultMargin     Float?   @default(30) // Default margin percentage if cost not available
   currency          String   @default("PLN")
+  locale            String   @default("en") // UI language: en, pl, es, de
   lastSyncAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -138,7 +138,8 @@ model Recommendation {
   expectedRoi               Float?
   confidenceLevel           Float    @default(0.5) // 0-1
   
-  reasoning                 String?  // Why this recommendation
+  reasoning                 String?  // Why this recommendation (legacy text)
+  reasoningKey              String?  // Key for i18n: increase, decrease, avoid, maintain
   isActive                  Boolean  @default(true)
   isApplied                 Boolean  @default(false)
   appliedAt                 DateTime?
@@ -146,6 +147,7 @@ model Recommendation {
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
+  @@unique([shopId, shopifyProductId])
   @@index([shopId])
   @@index([shopifyProductId])
   @@index([isActive])

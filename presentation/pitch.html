@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discount Intelligence – Pitch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #1a1a1f;
+      --text: #e8e6e3;
+      --muted: #8b8685;
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+      --success: #34d399;
+      --warning: #fbbf24;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    .slide {
+      min-height: 100vh;
+      padding: 3rem 4rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .slide-header {
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent-light);
+      margin-bottom: 1rem;
+    }
+
+    .slide h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .slide h2 {
+      font-size: 1.75rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    .slide p, .slide li {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 65ch;
+      margin-bottom: 0.75rem;
+    }
+
+    .slide ul {
+      list-style: none;
+      margin: 1rem 0;
+    }
+
+    .slide li {
+      padding-left: 1.5rem;
+      position: relative;
+    }
+
+    .slide li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.6em;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .screen-placeholder {
+      background: var(--surface);
+      border: 2px dashed var(--muted);
+      border-radius: 12px;
+      min-height: 320px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 2rem;
+      margin-top: 1.5rem;
+    }
+
+    .screen-placeholder strong {
+      display: block;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .screen-img {
+      width: 100%;
+      max-width: 900px;
+      border-radius: 12px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+      margin-top: 1rem;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .flow-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .flow-step p {
+      margin-bottom: 0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-success { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+    .badge-warning { background: rgba(251, 191, 36, 0.2); color: var(--warning); }
+
+    .nav-hint {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 4px;
+      background: var(--accent);
+      transform-origin: left;
+      z-index: 10;
+    }
+
+    .cover .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .cover .tagline {
+      font-size: 1.5rem;
+      color: var(--muted);
+      margin-top: 1rem;
+    }
+
+    .cta-box {
+      background: linear-gradient(135deg, var(--surface) 0%, rgba(124, 58, 237, 0.15) 100%);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-top: 2rem;
+      max-width: 500px;
+    }
+
+    .cta-box p {
+      margin-bottom: 0.5rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .plan-card {
+      background: var(--surface);
+      border: 1px solid rgba(124, 58, 237, 0.25);
+      border-radius: 16px;
+      padding: 1.75rem;
+      max-width: 380px;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-price {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    .plan-amount {
+      color: var(--success);
+    }
+
+    .plan-trial {
+      margin-bottom: 1rem;
+    }
+
+    .plan-features {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .plan-features li {
+      font-size: 0.95rem;
+      padding-left: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .plan-features li::before {
+      top: 0.5em;
+      width: 5px;
+      height: 5px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress" id="progress" style="width: 0%"></div>
+
+  <!-- 1. Okładka -->
+  <section class="slide cover" id="slide-1">
+    <p class="logo">Discount Intelligence</p>
+    <h1>Rabaty, które się opłacają</h1>
+    <p class="tagline">Aplikacja Shopify do analizy rentowności rabatów i rekomendacji produktowych</p>
+  </section>
+
+  <!-- 2. Problem -->
+  <section class="slide" id="slide-2">
+    <p class="slide-header">Problem</p>
+    <h1>Sklepy dają rabaty w ciemno</h1>
+    <p>Większość sprzedawców nie wie, które kody rabatowe realnie zwiększają zysk, a które tylko obniżają marżę.</p>
+    <ul>
+      <li>Brak podsumowania: który rabat ile zarobił / stracił</li>
+      <li>Brak porównania: sprzedaż z rabatem vs bez</li>
+      <li>Brak rekomendacji: na które produkty warto dawać rabat, a na które nie</li>
+    </ul>
+  </section>
+
+  <!-- 3. Rozwiązanie -->
+  <section class="slide" id="slide-3">
+    <p class="slide-header">Rozwiązanie</p>
+    <h1>Discount Intelligence</h1>
+    <p>Aplikacja w panelu Shopify, która łączy dane z zamówień, rabatów i produktów, liczy ROI i sugeruje optymalne rabaty. Metodologia oparta na analizie ROI promocji i breakeven (inspiracja: McKinsey, dobre praktyki retail).</p>
+    <ul>
+      <li><strong>Sync z Shopify</strong> — pobiera zamówienia, kody rabatowe i koszty produktów</li>
+      <li><strong>Analiza rentowności</strong> — zysk, przychód, ROI i wskaźnik opłacalności per rabat</li>
+      <li><strong>Rekomendacje z uzasadnieniem</strong> — „zwiększ / zmniejsz / unikaj / utrzymaj” + blok „Dlaczego”, żeby merchant wiedział, skąd bierze się rekomendacja</li>
+      <li><strong>Jedno kliknięcie</strong> — tworzenie kodu rabatowego w Shopify z rekomendacji</li>
+      <li><strong>Wielojęzyczność</strong> — interfejs w 4 językach: angielski, polski, hiszpański, niemiecki (wybór w ustawieniach)</li>
+    </ul>
+  </section>
+
+  <!-- 4. Jak to działa (flow) -->
+  <section class="slide" id="slide-4">
+    <p class="slide-header">Jak to działa</p>
+    <h1>Przepływ danych</h1>
+    <div class="flow-step">
+      <span class="flow-num">1</span>
+      <div>
+        <p><strong>Merchant klika „Synchronizuj dane”</strong> w aplikacji.</p>
+        <p>Aplikacja pobiera z Shopify: zamówienia (ostatnie 90 dni), kody rabatowe, produkty z kosztem.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">2</span>
+      <div>
+        <p><strong>Analiza w tle.</strong> Dla każdego kodu rabatu: suma zamówień, przychód, koszt, zysk, ROI. Dla produktów: sprzedaż z rabatem vs bez.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">3</span>
+      <div>
+        <p><strong>Dashboard i rekomendacje.</strong> Widać, które rabaty są opłacalne, które nie. Algorytm sugeruje: zwiększ / zmniejsz / unikaj / utrzymaj rabatu na dany produkt — z blokiem „Dlaczego”, żeby merchant rozumiał uzasadnienie.</p>
+      </div>
+    </div>
+    <div class="flow-step">
+      <span class="flow-num">4</span>
+      <div>
+        <p><strong>„Zastosuj rekomendację”.</strong> Jednym przyciskiem tworzy się w Shopify nowy kod rabatowy (np. 10% na cały koszyk) zgodnie z sugestią.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4b. Metodologia -->
+  <section class="slide" id="slide-methodology">
+    <p class="slide-header">Discount Intelligence · Metodologia</p>
+    <h1>W oparciu o uznaną wiedzę z retailu i konsultingu</h1>
+
+    <p class="slide-header" style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Rentowność rabatu</p>
+    <ul>
+      <li><strong>ROI promocji</strong> — zysk przy rabacie vs. baseline (zamówienia bez rabatu). Rabat opłacalny, gdy zysk netto &gt; 0 (logika incremental profit, m.in. McKinsey <em>Marketing ROI</em>, praktyka CPG/retail).</li>
+      <li><strong>Breakeven</strong> — mnożnik: ile dodatkowych sztuk trzeba sprzedać, żeby zrekompensować spadek marży (marża pełna / marża po rabacie).</li>
+      <li><strong>Porównanie z baseline</strong> — uśredniony zysk na zamówienie z rabatem vs. bez; wartość udzielonego rabatu traktowana jako „koszt” promocji.</li>
+    </ul>
+
+    <p class="slide-header" style="margin-top: 1.5rem; margin-bottom: 0.5rem;">Rekomendacje produktowe</p>
+    <ul>
+      <li><strong>Progi decyzyjne</strong> — na podstawie historycznego ROI (wskaźnik rentowności): &lt; −20% → unikaj; &lt; 0 → zmniejsz; 0–50% → utrzymaj; &gt; 50% + elastyczność → zwiększ.</li>
+      <li><strong>Reguła marży</strong> — sugerowany rabat nie przekracza 50% marży produktu (margin-safe discount, standard w zarządzaniu promocjami).</li>
+      <li><strong>Oczekiwany ROI</strong> — ekstrapolacja z historycznego ROI i zmiany poziomu rabatu; poziom pewności zależny od przedziału ROI.</li>
+    </ul>
+
+    <p style="margin-top: 1.5rem; font-size: 0.9rem; color: var(--muted);">
+      Inspiracja: analiza ROI promocji i incremental profit (McKinsey, BCG), breakeven analysis, dobre praktyki zarządzania rabatami w retailu.
+    </p>
+  </section>
+
+  <!-- 5. Ekran: Dashboard aplikacji -->
+  <section class="slide" id="slide-5">
+    <p class="slide-header">Aplikacja</p>
+    <h1>Dashboard</h1>
+    <p>Przegląd rentowności rabatów: wpływ na zysk, % opłacalnych rabatów, średni ROI, udzielone rabaty. Tabela analiz + ostatnia synchronizacja.</p>
+    <div class="screen-placeholder" id="screen-dashboard">
+      <div>
+        <strong>Zrzut ekranu: Dashboard aplikacji</strong>
+        Wstaw plik <code>dashboard.png</code> (lub zmień ścieżkę w &lt;img&gt; poniżej).<br>
+        Pokazuje: KPIs, tabela rabatów, rekomendacje w sidebarze, przycisk „Synchronizuj dane”.
+      </div>
+    </div>
+    <img class="screen-img" id="img-dashboard" src="screens/dashboard.png" alt="Dashboard" style="display: none;">
+  </section>
+
+  <!-- 6. Ekran: Historia rabatów -->
+  <section class="slide" id="slide-6">
+    <p class="slide-header">Aplikacja</p>
+    <h1>Historia rabatów</h1>
+    <p>Lista wszystkich kodów z metrykami: zamówienia, przychód, zysk, ROI, wskaźnik rentowności. Eksport do CSV.</p>
+    <div class="screen-placeholder" id="screen-discounts">
+      <div>
+        <strong>Zrzut ekranu: Historia rabatów</strong>
+        Wstaw <code>discounts.png</code> — widok listy rabatów z kartami (kod, opłacalny/nieopłacalny, metryki).
+      </div>
+    </div>
+    <img class="screen-img" id="img-discounts" src="screens/discounts.png" alt="Historia rabatów" style="display: none;">
+  </section>
+
+  <!-- 7. Ekran: Rekomendacje -->
+  <section class="slide" id="slide-7">
+    <p class="slide-header">Aplikacja</p>
+    <h1>Rekomendacje produktowe</h1>
+    <p>Aktywne rekomendacje z przyciskiem „Zastosuj” (tworzy rabat w Shopify). Przy każdej karcie widoczny blok <strong>„Dlaczego”</strong> — krótkie uzasadnienie (np. „Wysoka elastyczność i pozytywny ROI…”), żeby klient wiedział, skąd rekomendacja. Odrzucone i wydajność produktów w sidebarze.</p>
+    <div class="screen-placeholder" id="screen-recommendations">
+      <div>
+        <strong>Zrzut ekranu: Rekomendacje</strong>
+        Wstaw <code>recommendations.png</code> — karty rekomendacji (produkt, typ, sugerowany %, <strong>Dlaczego</strong>, przycisk Zastosuj).
+      </div>
+    </div>
+    <img class="screen-img" id="img-recommendations" src="screens/recommendations.png" alt="Rekomendacje" style="display: none;">
+  </section>
+
+  <!-- 8. Ekran: Shopify – Rabaty -->
+  <section class="slide" id="slide-8">
+    <p class="slide-header">Shopify</p>
+    <h1>Panel Rabaty w Shopify</h1>
+    <p>Źródło danych: kody rabatowe i ich użycie. Aplikacja synchronizuje te dane i wzbogaca je o analizę rentowności.</p>
+    <div class="screen-placeholder" id="screen-shopify-discounts">
+      <div>
+        <strong>Zrzut ekranu: Shopify Admin → Rabaty</strong>
+        Wstaw <code>shopify-discounts.png</code> — lista rabatów w Shopify (kontekst: skąd bierzemy kody).
+      </div>
+    </div>
+    <img class="screen-img" id="img-shopify-discounts" src="screens/shopify-discounts.png" alt="Shopify Rabaty" style="display: none;">
+  </section>
+
+  <!-- 9. Ekran: Shopify – Zamówienia / Produkty -->
+  <section class="slide" id="slide-9">
+    <p class="slide-header">Shopify</p>
+    <h1>Zamówienia i produkty</h1>
+    <p>Zamówienia z rabatami i kosztem pozycji; produkty z kosztem za sztukę. To pozwala liczyć realny zysk i ROI.</p>
+    <div class="two-col">
+      <div>
+        <p><span class="badge badge-success">Zamówienia</span></p>
+        <div class="screen-placeholder" id="screen-shopify-orders">
+          <strong>Shopify: Zamówienia</strong><br>
+          <code>shopify-orders.png</code>
+        </div>
+        <img class="screen-img" id="img-shopify-orders" src="screens/shopify-orders.png" alt="Zamówienia" style="display: none;">
+      </div>
+      <div>
+        <p><span class="badge badge-warning">Koszt produktu</span></p>
+        <div class="screen-placeholder" id="screen-shopify-products">
+          <strong>Shopify: Produkt → Koszt</strong><br>
+          <code>shopify-products.png</code>
+        </div>
+        <img class="screen-img" id="img-shopify-products" src="screens/shopify-products.png" alt="Produkty" style="display: none;">
+      </div>
+    </div>
+  </section>
+
+  <!-- 9b. Plany i cennik -->
+  <section class="slide" id="slide-pricing">
+    <p class="slide-header">Oferta</p>
+    <h1>Plany i cennik</h1>
+    <p>Prosty model subskrypcji przez Shopify Billing — płatność dodawana do rachunku sklepu. Standardowo: darmowy okres próbny, potem miesięczna opłata.</p>
+
+    <div class="plans-grid">
+      <div class="plan-card">
+        <p class="plan-name">Discount Intelligence Pro</p>
+        <p class="plan-price"><span class="plan-amount">9,99 USD</span> / miesiąc</p>
+        <p class="plan-trial"><span class="badge badge-success">14 dni za darmo</span></p>
+        <ul class="plan-features">
+          <li>Pełna analiza rentowności rabatów</li>
+          <li>Rekomendacje z uzasadnieniem („Dlaczego”) — zwiększ / zmniejsz / unikaj / utrzymaj</li>
+          <li>Sync zamówień, rabatów i produktów</li>
+          <li>„Zastosuj rekomendację” — jeden klik do kodu w Shopify</li>
+          <li>Historia rabatów i eksport CSV</li>
+          <li>Interfejs w 4 językach: EN, PL, ES, DE</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="margin-top: 1.5rem; font-size: 0.95rem; color: var(--muted);">
+      Płatność w ramach faktury Shopify. Opcjonalnie w przyszłości: plan roczny (ze zniżką) lub dodatkowe pakiety (np. raporty za usage).
+    </p>
+  </section>
+
+  <!-- 10. Podsumowanie + CTA -->
+  <section class="slide" id="slide-10">
+    <p class="slide-header">Podsumowanie</p>
+    <h1>Discount Intelligence w skrócie</h1>
+    <ul>
+      <li>Działa wewnątrz Shopify Admin (aplikacja embedded)</li>
+      <li>Metodologia: ROI promocji vs. baseline, breakeven, reguła 50% marży (inspiracja McKinsey / retail)</li>
+      <li>Jedna synchronizacja → pełna analiza rabatów i rekomendacje</li>
+      <li>Rekomendacje z blokiem „Dlaczego” — klient wie, skąd rekomendacja</li>
+      <li>Jasne KPIs: zysk, ROI, % opłacalnych rabatów</li>
+      <li>Rekomendacje z jednym kliknięciem w nowy kod rabatowy</li>
+      <li>Interfejs w 4 językach (EN, PL, ES, DE) — wybór w ustawieniach</li>
+      <li>Eksport CSV do raportów</li>
+    </ul>
+    <div class="cta-box">
+      <p><strong>Dziękujemy za uwagę</strong></p>
+      <p>Discount Intelligence — rabaty, które się opłacają. Aplikacja w Shopify App Store.</p>
+    </div>
+  </section>
+
+  <p class="nav-hint">↓ przewiń lub użyj strzałek</p>
+
+  <script>
+    (function() {
+      const slides = document.querySelectorAll('.slide');
+      const progress = document.getElementById('progress');
+
+      function updateProgress() {
+        const scrollTop = window.scrollY || document.documentElement.scrollTop;
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+        progress.style.width = pct + '%';
+      }
+
+      window.addEventListener('scroll', updateProgress);
+      window.addEventListener('resize', updateProgress);
+      updateProgress();
+
+      // Optional: show image if it loads (replace placeholder)
+      document.querySelectorAll('.screen-img').forEach(function(img) {
+        img.onload = function() {
+          var id = img.id.replace('img-', '');
+          var ph = document.getElementById('screen-' + id);
+          if (ph) ph.style.display = 'none';
+          img.style.display = 'block';
+        };
+        img.onerror = function() { /* keep placeholder */ };
+      });
+    })();
+  </script>
+</body>
+</html>

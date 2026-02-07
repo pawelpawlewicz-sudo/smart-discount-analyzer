@@ -218,6 +218,24 @@ export const GET_PRODUCTS_WITH_COST = `#graphql
   }
 `;
 
+// Mutation: create basic percentage discount code (for "Zastosuj rekomendację")
+export const CREATE_DISCOUNT_CODE_BASIC = `#graphql
+  mutation CreateDiscountCode($basicCodeDiscount: DiscountCodeBasicInput!) {
+    discountCodeBasicCreate(basicCodeDiscount: $basicCodeDiscount) {
+      codeDiscountNode {
+        id
+        codeDiscount {
+          ... on DiscountCodeBasic {
+            title
+            codes(first: 5) { nodes { code } }
+          }
+        }
+      }
+      userErrors { field message }
+    }
+  }
+`;
+
 // Query to get shop info
 export const GET_SHOP_INFO = `#graphql
   query GetShopInfo {
@@ -286,8 +304,45 @@ export const GET_ORDERS_BY_DISCOUNT_CODE = `#graphql
   }
 `;
 
+const DEFAULT_RETRY_DELAY_MS = 1000;
+const MAX_RETRIES = 5;
+
 /**
- * Helper to paginate through all results
+ * Call admin.graphql with retry on rate limit (429) and server errors (5xx)
+ */
+async function graphqlWithRetry(admin, query, variables) {
+    let lastError;
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const response = await admin.graphql(query, { variables });
+        const status = response.status;
+
+        if (status === 429) {
+            const delay = DEFAULT_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+        }
+        if (status >= 500 && status < 600) {
+            const delay = DEFAULT_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
+            await new Promise((r) => setTimeout(r, delay));
+            continue;
+        }
+
+        const data = await response.json();
+        if (data.errors && data.errors.length > 0) {
+            lastError = new Error(data.errors.map((e) => e.message).join("; "));
+            if (attempt < MAX_RETRIES) {
+                await new Promise((r) => setTimeout(r, DEFAULT_RETRY_DELAY_MS * attempt));
+                continue;
+            }
+            throw lastError;
+        }
+        return data;
+    }
+    throw lastError || new Error("GraphQL request failed after retries");
+}
+
+/**
+ * Helper to paginate through all results (with retry/backoff for rate limits)
  */
 export async function fetchAllPages(admin, query, variables, extractEdges) {
     const allResults = [];
@@ -295,19 +350,21 @@ export async function fetchAllPages(admin, query, variables, extractEdges) {
     let cursor = null;
 
     while (hasNextPage) {
-        const response = await admin.graphql(query, {
-            variables: { ...variables, after: cursor }
+        const data = await graphqlWithRetry(admin, query, {
+            ...variables,
+            after: cursor
         });
 
-        const data = await response.json();
         const result = extractEdges(data.data);
+        const edges = result?.edges ?? [];
+        const pageInfo = result?.pageInfo ?? { hasNextPage: false, endCursor: null };
 
-        allResults.push(...result.edges.map(edge => edge.node));
-        hasNextPage = result.pageInfo.hasNextPage;
-        cursor = result.pageInfo.endCursor;
+        allResults.push(...edges.map((edge) => edge.node));
 
-        // Rate limiting - wait 100ms between calls
-        await new Promise(resolve => setTimeout(resolve, 100));
+        hasNextPage = pageInfo.hasNextPage === true;
+        cursor = pageInfo.endCursor ?? null;
+
+        await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
     return allResults;

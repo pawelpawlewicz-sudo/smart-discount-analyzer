@@ -3,6 +3,7 @@
  * Synchronizes data from Shopify to local database
  */
 
+import crypto from "node:crypto";
 import prisma from "../db.server.js";
 import {
     GET_ORDERS_WITH_DISCOUNTS,
@@ -57,7 +58,7 @@ export async function updateSyncLog(syncLogId, updates) {
 }
 
 /**
- * Sync all discount codes from Shopify
+ * Sync all discount codes from Shopify (with pagination; creates and updates)
  */
 export async function syncDiscountCodes(admin, shopId) {
     const discounts = await fetchAllPages(
@@ -73,41 +74,52 @@ export async function syncDiscountCodes(admin, shopId) {
         const codeDiscount = discount.codeDiscount;
         if (!codeDiscount) continue;
 
-        // Extract discount code and value
-        const codes = codeDiscount.codes?.edges?.map(e => e.node.code) || [];
-        const discountCode = codes[0] || codeDiscount.title;
+        const codes = codeDiscount.codes?.edges?.map((e) => e.node.code) || [];
+        const discountCode = codes[0] || codeDiscount.title || "unknown";
 
-        // Determine discount type and value
         let discountType = "percentage";
         let discountValue = 0;
 
         const customerGetsValue = codeDiscount.customerGets?.value;
-        if (customerGetsValue?.percentage) {
+        if (customerGetsValue?.percentage != null) {
             discountType = "percentage";
-            discountValue = customerGetsValue.percentage;
-        } else if (customerGetsValue?.amount?.amount) {
+            discountValue = Number(customerGetsValue.percentage);
+        } else if (customerGetsValue?.amount?.amount != null) {
             discountType = "fixed_amount";
             discountValue = parseFloat(customerGetsValue.amount.amount);
+        } else {
+            discountType = "buy_x_get_y";
         }
 
-        // Check if analysis already exists
+        const startDate = codeDiscount.startsAt ? new Date(codeDiscount.startsAt) : new Date();
+        const endDate = codeDiscount.endsAt ? new Date(codeDiscount.endsAt) : null;
+        const totalOrdersFromApi = codeDiscount.asyncUsageCount ?? 0;
+
         const existingAnalysis = await prisma.discountAnalysis.findFirst({
-            where: {
-                shopId,
-                discountCode
-            }
+            where: { shopId, discountCode }
         });
 
-        if (!existingAnalysis) {
+        if (existingAnalysis) {
+            await prisma.discountAnalysis.update({
+                where: { id: existingAnalysis.id },
+                data: {
+                    discountType,
+                    discountValue,
+                    startDate,
+                    endDate,
+                    totalOrders: totalOrdersFromApi
+                }
+            });
+        } else {
             await prisma.discountAnalysis.create({
                 data: {
                     shopId,
                     discountCode,
                     discountType,
                     discountValue,
-                    startDate: codeDiscount.startsAt ? new Date(codeDiscount.startsAt) : new Date(),
-                    endDate: codeDiscount.endsAt ? new Date(codeDiscount.endsAt) : null,
-                    totalOrders: codeDiscount.asyncUsageCount || 0
+                    startDate,
+                    endDate,
+                    totalOrders: totalOrdersFromApi
                 }
             });
         }
@@ -208,6 +220,83 @@ export async function syncOrders(admin, shopId, daysBack = 90) {
         }
     }
 
+    // Aggregate per-product stats: with discount vs without (for ProductDiscountPerformance)
+    const productStats = new Map(); // productId -> { unitsWith, revenueWith, profitWith, unitsWithout, revenueWithout, profitWithout }
+
+    function addLineItemsToMap(order, useDiscountedPrice) {
+        const lineEdges = order.lineItems?.edges || [];
+        for (const edge of lineEdges) {
+            const node = edge.node;
+            const productId = node.product?.id;
+            if (!productId) continue;
+
+            const qty = node.quantity || 0;
+            const costPerItem = node.variant?.inventoryItem?.unitCost?.amount
+                ? parseFloat(node.variant.inventoryItem.unitCost.amount)
+                : 0;
+            const unitPrice = useDiscountedPrice
+                ? parseFloat(node.discountedUnitPriceSet?.shopMoney?.amount || node.originalUnitPriceSet?.shopMoney?.amount || 0)
+                : parseFloat(node.originalUnitPriceSet?.shopMoney?.amount || 0);
+
+            const revenue = qty * unitPrice;
+            const cost = qty * costPerItem;
+            const profit = revenue - cost;
+
+            if (!productStats.has(productId)) {
+                productStats.set(productId, {
+                    unitsSoldWithDiscount: 0,
+                    revenueWithDiscount: 0,
+                    profitWithDiscount: 0,
+                    unitsSoldWithoutDiscount: 0,
+                    revenueWithoutDiscount: 0,
+                    profitWithoutDiscount: 0
+                });
+            }
+            const s = productStats.get(productId);
+            if (useDiscountedPrice) {
+                s.unitsSoldWithDiscount += qty;
+                s.revenueWithDiscount += revenue;
+                s.profitWithDiscount += profit;
+            } else {
+                s.unitsSoldWithoutDiscount += qty;
+                s.revenueWithoutDiscount += revenue;
+                s.profitWithoutDiscount += profit;
+            }
+        }
+    }
+
+    for (const order of orders) {
+        const hasDiscount = (order.discountApplications?.edges?.length || 0) > 0;
+        addLineItemsToMap(order, hasDiscount);
+    }
+
+    // Update ProductDiscountPerformance for products we have in DB
+    const shopProducts = await prisma.productDiscountPerformance.findMany({
+        where: { shopId },
+        select: { id: true, shopifyProductId: true }
+    });
+
+    for (const row of shopProducts) {
+        const stats = productStats.get(row.shopifyProductId);
+        if (!stats) continue;
+
+        const margin = 0; // leave as-is, computed elsewhere
+        const profitabilityScore = Math.min(100, Math.max(0, 50 + (stats.profitWithDiscount - stats.profitWithoutDiscount > 0 ? 10 : -10)));
+
+        await prisma.productDiscountPerformance.update({
+            where: { id: row.id },
+            data: {
+                unitsSoldWithDiscount: stats.unitsSoldWithDiscount,
+                unitsSoldWithoutDiscount: stats.unitsSoldWithoutDiscount,
+                revenueWithDiscount: stats.revenueWithDiscount,
+                revenueWithoutDiscount: stats.revenueWithoutDiscount,
+                profitWithDiscount: stats.profitWithDiscount,
+                profitWithoutDiscount: stats.profitWithoutDiscount,
+                profitabilityScore
+            }
+        });
+    }
+
     return orders.length;
 }
 
@@ -222,35 +311,43 @@ export async function syncProducts(admin, shopId) {
         (data) => data.products
     );
 
-    // Store product data for future reference
+    const perfIdMaxLen = 36;
     for (const product of products) {
         const variants = product.variants?.edges || [];
+        const productTitle = product.title || "Produkt";
+        const productCategory = product.productType || null;
+        const productId = product.id;
+        const id = crypto.createHash("sha256").update(shopId + productId).digest("hex").slice(0, perfIdMaxLen);
 
         for (const variantEdge of variants) {
             const variant = variantEdge.node;
+            const regularPrice = parseFloat(variant.price) || 0;
             const cost = variant.inventoryItem?.unitCost?.amount
                 ? parseFloat(variant.inventoryItem.unitCost.amount)
                 : null;
+            const margin =
+                regularPrice > 0 && cost != null
+                    ? Math.round(((regularPrice - cost) / regularPrice) * 1000) / 10
+                    : null;
 
-            // Update or create product performance record
             await prisma.productDiscountPerformance.upsert({
-                where: {
-                    id: `${shopId}-${product.id}`.slice(0, 36) // Generate consistent ID
-                },
+                where: { id },
                 update: {
-                    regularPrice: parseFloat(variant.price),
+                    regularPrice,
                     costPerItem: cost,
-                    productTitle: product.title,
-                    productCategory: product.productType || null
+                    margin,
+                    productTitle,
+                    productCategory
                 },
                 create: {
-                    id: `${shopId}-${product.id}`.slice(0, 36),
+                    id,
                     shopId,
-                    shopifyProductId: product.id,
-                    productTitle: product.title,
-                    productCategory: product.productType || null,
-                    regularPrice: parseFloat(variant.price),
-                    costPerItem: cost
+                    shopifyProductId: productId,
+                    productTitle,
+                    productCategory,
+                    regularPrice,
+                    costPerItem: cost,
+                    margin
                 }
             });
         }
@@ -268,8 +365,8 @@ export async function performFullSync(admin, shopDomain) {
 
     try {
         const discountsProcessed = await syncDiscountCodes(admin, shop.id);
-        const ordersProcessed = await syncOrders(admin, shop.id, 90);
         const productsProcessed = await syncProducts(admin, shop.id);
+        const ordersProcessed = await syncOrders(admin, shop.id, 90);
 
         await updateSyncLog(syncLog.id, {
             status: "completed",
@@ -291,12 +388,18 @@ export async function performFullSync(admin, shopDomain) {
             productsProcessed
         };
     } catch (error) {
-        await updateSyncLog(syncLog.id, {
-            status: "failed",
-            errorMessage: error.message,
-            completedAt: new Date()
-        });
-
+        await updateSyncLog(syncLog.id, getFailedSyncLogUpdate(error));
         throw error;
     }
+}
+
+/**
+ * Build update payload for sync log on failure (testable)
+ */
+export function getFailedSyncLogUpdate(error) {
+    return {
+        status: "failed",
+        errorMessage: error?.message ?? String(error),
+        completedAt: new Date()
+    };
 }

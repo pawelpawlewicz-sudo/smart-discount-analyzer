@@ -1,6 +1,10 @@
-# Shopify App Template - React Router
+# Discount Intelligence (Smart Discount Analyzer)
 
-This is a template for building a [Shopify app](https://shopify.dev/docs/apps/getting-started) using [React Router](https://reactrouter.com/). It was forked from the [Shopify Remix app template](https://github.com/Shopify/shopify-app-template-remix) and converted to React Router.
+**Nazwa produktu:** Discount Intelligence — *Rabaty, które się opłacają*. Aplikacja Shopify do analizy rentowności rabatów i rekomendacji.
+
+---
+
+This project is based on the [Shopify App Template - React Router](https://github.com/Shopify/shopify-app-template-react-router). It was forked from the [Shopify Remix app template](https://github.com/Shopify/shopify-app-template-remix) and converted to React Router.
 
 Rather than cloning this repo, follow the [Quick Start steps](https://github.com/Shopify/shopify-app-template-react-router#quick-start).
 

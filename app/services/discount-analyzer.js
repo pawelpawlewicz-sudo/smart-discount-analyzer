@@ -239,7 +239,8 @@ export function generateRecommendation({
     suggestedDiscountPercent,
     expectedRoi: expectedROI,
     confidenceLevel: confidence,
-    reasoning
+    reasoning,
+    reasoningKey: recommendationType // for i18n: increase, decrease, avoid, maintain
   };
 }
 

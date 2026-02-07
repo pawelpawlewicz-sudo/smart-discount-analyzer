@@ -14,6 +14,15 @@ type Pages = {
   "/": {
     params: {};
   };
+  "/webhooks/compliance/customers/data_request": {
+    params: {};
+  };
+  "/webhooks/compliance/customers/redact": {
+    params: {};
+  };
+  "/webhooks/compliance/shop/redact": {
+    params: {};
+  };
   "/webhooks/app/scopes_update": {
     params: {};
   };
@@ -43,10 +52,16 @@ type Pages = {
   "/app/recommendations": {
     params: {};
   };
+  "/app/recommendations/export": {
+    params: {};
+  };
   "/app/additional": {
     params: {};
   };
   "/app/discounts": {
+    params: {};
+  };
+  "/app/discounts/export": {
     params: {};
   };
   "/app/settings": {
@@ -57,7 +72,19 @@ type Pages = {
 type RouteFiles = {
   "root.jsx": {
     id: "root";
-    page: "/" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/webhooks/products/update" | "/webhooks/orders/updated" | "/webhooks/orders/create" | "/auth/login" | "/auth/*" | "/app" | "/app/recommendations" | "/app/additional" | "/app/discounts" | "/app/settings";
+    page: "/" | "/webhooks/compliance/customers/data_request" | "/webhooks/compliance/customers/redact" | "/webhooks/compliance/shop/redact" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/webhooks/products/update" | "/webhooks/orders/updated" | "/webhooks/orders/create" | "/auth/login" | "/auth/*" | "/app" | "/app/recommendations" | "/app/recommendations/export" | "/app/additional" | "/app/discounts" | "/app/discounts/export" | "/app/settings";
+  };
+  "routes/webhooks.compliance.customers.data_request.jsx": {
+    id: "routes/webhooks.compliance.customers.data_request";
+    page: "/webhooks/compliance/customers/data_request";
+  };
+  "routes/webhooks.compliance.customers.redact.jsx": {
+    id: "routes/webhooks.compliance.customers.redact";
+    page: "/webhooks/compliance/customers/redact";
+  };
+  "routes/webhooks.compliance.shop.redact.jsx": {
+    id: "routes/webhooks.compliance.shop.redact";
+    page: "/webhooks/compliance/shop/redact";
   };
   "routes/webhooks.app.scopes_update.jsx": {
     id: "routes/webhooks.app.scopes_update";
@@ -93,11 +120,15 @@ type RouteFiles = {
   };
   "routes/app.jsx": {
     id: "routes/app";
-    page: "/app" | "/app/recommendations" | "/app/additional" | "/app/discounts" | "/app/settings";
+    page: "/app" | "/app/recommendations" | "/app/recommendations/export" | "/app/additional" | "/app/discounts" | "/app/discounts/export" | "/app/settings";
   };
   "routes/app.recommendations.jsx": {
     id: "routes/app.recommendations";
-    page: "/app/recommendations";
+    page: "/app/recommendations" | "/app/recommendations/export";
+  };
+  "routes/app.recommendations.export.jsx": {
+    id: "routes/app.recommendations.export";
+    page: "/app/recommendations/export";
   };
   "routes/app.additional.jsx": {
     id: "routes/app.additional";
@@ -105,7 +136,11 @@ type RouteFiles = {
   };
   "routes/app.discounts.jsx": {
     id: "routes/app.discounts";
-    page: "/app/discounts";
+    page: "/app/discounts" | "/app/discounts/export";
+  };
+  "routes/app.discounts.export.jsx": {
+    id: "routes/app.discounts.export";
+    page: "/app/discounts/export";
   };
   "routes/app.settings.jsx": {
     id: "routes/app.settings";
@@ -119,6 +154,9 @@ type RouteFiles = {
 
 type RouteModules = {
   "root": typeof import("./app/root.jsx");
+  "routes/webhooks.compliance.customers.data_request": typeof import("./app/routes/webhooks.compliance.customers.data_request.jsx");
+  "routes/webhooks.compliance.customers.redact": typeof import("./app/routes/webhooks.compliance.customers.redact.jsx");
+  "routes/webhooks.compliance.shop.redact": typeof import("./app/routes/webhooks.compliance.shop.redact.jsx");
   "routes/webhooks.app.scopes_update": typeof import("./app/routes/webhooks.app.scopes_update.jsx");
   "routes/webhooks.app.uninstalled": typeof import("./app/routes/webhooks.app.uninstalled.jsx");
   "routes/webhooks.products.update": typeof import("./app/routes/webhooks.products.update.jsx");
@@ -129,8 +167,10 @@ type RouteModules = {
   "routes/auth.$": typeof import("./app/routes/auth.$.jsx");
   "routes/app": typeof import("./app/routes/app.jsx");
   "routes/app.recommendations": typeof import("./app/routes/app.recommendations.jsx");
+  "routes/app.recommendations.export": typeof import("./app/routes/app.recommendations.export.jsx");
   "routes/app.additional": typeof import("./app/routes/app.additional.jsx");
   "routes/app.discounts": typeof import("./app/routes/app.discounts.jsx");
+  "routes/app.discounts.export": typeof import("./app/routes/app.discounts.export.jsx");
   "routes/app.settings": typeof import("./app/routes/app.settings.jsx");
   "routes/app._index": typeof import("./app/routes/app._index.jsx");
 };

@@ -1,5 +1,5 @@
 /**
- * Smart Discount Analyzer - Main Dashboard
+ * Discount Intelligence - Main Dashboard
  * Shows KPIs, discount performance, and recommendations
  */
 
@@ -10,6 +10,7 @@ import { boundary } from "@shopify/shopify-app-react-router/server";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
 import { performFullSync } from "../services/data-sync";
+import { getTForLocale } from "../i18n/translations";
 
 export const loader = async ({ request }) => {
   const { admin, session } = await authenticate.admin(request);
@@ -65,8 +66,10 @@ export const loader = async ({ request }) => {
     orderBy: { completedAt: "desc" }
   });
 
+  const locale = shop?.locale ?? "en";
   return {
     shop,
+    locale,
     kpis: {
       totalDiscounts,
       profitableDiscounts,
@@ -113,8 +116,11 @@ export const action = async ({ request }) => {
   return { success: false, error: "Unknown action" };
 };
 
+const localeToDateFormat = { en: "en-US", pl: "pl-PL", es: "es-ES", de: "de-DE" };
+
 export default function Dashboard() {
-  const { shop, kpis, discountAnalyses, recommendations, lastSync } = useLoaderData();
+  const { shop, kpis, discountAnalyses, recommendations, lastSync, locale } = useLoaderData();
+  const t = getTForLocale(locale ?? "en");
   const fetcher = useFetcher();
   const shopify = useAppBridge();
 
@@ -122,19 +128,19 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (fetcher.data?.success) {
-      shopify.toast.show("Synchronizacja zakończona!");
+      shopify.toast.show(t("success.syncDone") || "Sync complete");
     } else if (fetcher.data?.error) {
-      shopify.toast.show(`Błąd: ${fetcher.data.error}`, { isError: true });
+      shopify.toast.show(`${t("error.generic")}: ${fetcher.data.error}`, { isError: true });
     }
-  }, [fetcher.data, shopify]);
+  }, [fetcher.data, shopify, t]);
 
   const handleSync = () => {
     fetcher.submit({ action: "sync" }, { method: "POST" });
   };
 
-  // Format currency
+  const dateLocale = localeToDateFormat[locale] || "en-US";
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pl-PL', {
+    return new Intl.NumberFormat(dateLocale, {
       style: 'currency',
       currency: shop.currency || 'PLN'
     }).format(value);
@@ -151,96 +157,81 @@ export default function Dashboard() {
   };
 
   return (
-    <s-page heading="Smart Discount Analyzer">
-      <s-button
-        slot="primary-action"
-        onClick={handleSync}
-        {...(isSyncing ? { loading: true } : {})}
-      >
-        Synchronizuj dane
-      </s-button>
+    <s-page heading={t("dashboard.title")}>
+      <div className="sda-hero">
+        <svg className="sda-hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M3 3v18h18" />
+          <path d="M18 9l-5 5-4-4-3 3" />
+        </svg>
+        <h2 className="sda-hero-title">{t("dashboard.hero.title")}</h2>
+        <p className="sda-hero-desc">
+          {t("dashboard.hero.desc")}
+        </p>
+        <div className="sda-cta-group">
+          <s-button
+            variant="primary"
+            onClick={handleSync}
+            {...(isSyncing ? { loading: true } : {})}
+          >
+            {t("dashboard.sync")}
+          </s-button>
+          <a href="/app/recommendations" className="sda-cta-secondary">
+            {t("dashboard.generateRecommendations")}
+          </a>
+        </div>
+      </div>
 
-      {/* KPI Section */}
-      <s-section heading="Przegląd rentowności rabatów">
-        <s-stack gap="loose">
-          <s-paragraph>
-            {lastSync ? (
-              <>
-                Ostatnia synchronizacja: {new Date(lastSync.completedAt).toLocaleString('pl-PL')}
-                ({lastSync.ordersProcessed} zamówień, {lastSync.discountsProcessed} rabatów)
-              </>
-            ) : (
-              "Brak synchronizacji. Kliknij 'Synchronizuj dane' aby pobrać historię rabatów."
-            )}
-          </s-paragraph>
-
-          <s-grid columns="4" gap="base">
-            {/* Total Profit Impact */}
-            <s-card>
-              <s-stack gap="tight">
-                <s-text variant="headingMd">Wpływ na zysk</s-text>
-                <s-text variant="heading2xl" tone={kpis.totalProfit >= 0 ? "success" : "critical"}>
-                  {formatCurrency(kpis.totalProfit)}
-                </s-text>
-                <s-text variant="bodySm" tone="subdued">
-                  z {kpis.totalDiscounts} rabatów
-                </s-text>
-              </s-stack>
-            </s-card>
-
-            {/* Profitable Percentage */}
-            <s-card>
-              <s-stack gap="tight">
-                <s-text variant="headingMd">Opłacalne rabaty</s-text>
-                <s-text variant="heading2xl" tone={kpis.profitablePercentage >= 50 ? "success" : "warning"}>
-                  {kpis.profitablePercentage}%
-                </s-text>
-                <s-text variant="bodySm" tone="subdued">
-                  {kpis.profitableDiscounts} z {kpis.totalDiscounts}
-                </s-text>
-              </s-stack>
-            </s-card>
-
-            {/* Average ROI */}
-            <s-card>
-              <s-stack gap="tight">
-                <s-text variant="headingMd">Średni ROI</s-text>
-                <s-text variant="heading2xl" tone={kpis.avgROI >= 0 ? "success" : "critical"}>
-                  {formatPercent(kpis.avgROI)}
-                </s-text>
-                <s-text variant="bodySm" tone="subdued">
-                  zwrot z inwestycji w rabaty
-                </s-text>
-              </s-stack>
-            </s-card>
-
-            {/* Total Discount Given */}
-            <s-card>
-              <s-stack gap="tight">
-                <s-text variant="headingMd">Udzielone rabaty</s-text>
-                <s-text variant="heading2xl">
-                  {formatCurrency(kpis.totalDiscountAmount)}
-                </s-text>
-                <s-text variant="bodySm" tone="subdued">
-                  przychód: {formatCurrency(kpis.totalRevenue)}
-                </s-text>
-              </s-stack>
-            </s-card>
-          </s-grid>
-        </s-stack>
+      <s-section>
+        <s-paragraph tone="subdued">
+          {lastSync ? (
+            <>{t("dashboard.lastSync")}: <strong>{new Date(lastSync.completedAt).toLocaleString(dateLocale)}</strong> ({t("dashboard.ordersAndDiscounts", { orders: lastSync.ordersProcessed, discounts: lastSync.discountsProcessed })})</>
+          ) : (
+            t("dashboard.lastSyncNever")
+          )}
+        </s-paragraph>
       </s-section>
 
-      {/* Discount Analysis Table */}
-      <s-section heading="Analiza rabatów">
+      <s-section heading={t("dashboard.sectionProfitability")}>
+        <div className="sda-kpi-grid">
+          <div className="sda-kpi-card">
+            <div className="sda-kpi-label">{t("dashboard.kpi.profitImpact")}</div>
+            <div className={`sda-kpi-value ${kpis.totalProfit >= 0 ? "success" : "critical"}`}>
+              {formatCurrency(kpis.totalProfit)}
+            </div>
+            <div className="sda-kpi-meta">{t("dashboard.kpi.fromDiscounts", { count: kpis.totalDiscounts })}</div>
+          </div>
+          <div className="sda-kpi-card">
+            <div className="sda-kpi-label">{t("dashboard.kpi.profitableDiscounts")}</div>
+            <div className={`sda-kpi-value ${kpis.profitablePercentage >= 50 ? "success" : "warning"}`}>
+              {kpis.profitablePercentage}%
+            </div>
+            <div className="sda-kpi-meta">{t("dashboard.kpi.ofTotal", { a: kpis.profitableDiscounts, b: kpis.totalDiscounts })}</div>
+          </div>
+          <div className="sda-kpi-card">
+            <div className="sda-kpi-label">{t("dashboard.kpi.avgROI")}</div>
+            <div className={`sda-kpi-value ${kpis.avgROI >= 0 ? "success" : "critical"}`}>
+              {formatPercent(kpis.avgROI)}
+            </div>
+            <div className="sda-kpi-meta">{t("dashboard.kpi.roiReturn")}</div>
+          </div>
+          <div className="sda-kpi-card">
+            <div className="sda-kpi-label">{t("dashboard.kpi.discountsGiven")}</div>
+            <div className="sda-kpi-value">{formatCurrency(kpis.totalDiscountAmount)}</div>
+            <div className="sda-kpi-meta">{t("dashboard.kpi.revenue")}: {formatCurrency(kpis.totalRevenue)}</div>
+          </div>
+        </div>
+      </s-section>
+
+      <s-section heading={t("dashboard.sectionAnalysis")}>
         {discountAnalyses.length > 0 ? (
           <s-data-table>
             <s-heading slot="heading">
-              <s-text>Kod rabatowy</s-text>
-              <s-text>Zamówienia</s-text>
-              <s-text>Przychód</s-text>
-              <s-text>Zysk</s-text>
-              <s-text>ROI</s-text>
-              <s-text>Status</s-text>
+              <s-text>{t("dashboard.table.code")}</s-text>
+              <s-text>{t("dashboard.table.orders")}</s-text>
+              <s-text>{t("dashboard.table.revenue")}</s-text>
+              <s-text>{t("dashboard.table.profit")}</s-text>
+              <s-text>{t("dashboard.table.roi")}</s-text>
+              <s-text>{t("dashboard.table.status")}</s-text>
             </s-heading>
             {discountAnalyses.map((discount) => (
               <s-row key={discount.id}>
@@ -256,26 +247,28 @@ export default function Dashboard() {
                   {discount.roiPercentage ? formatPercent(discount.roiPercentage) : "N/A"}
                 </s-text>
                 <s-badge tone={getStatusColor(discount.isProfitable, discount.profitabilityScore)}>
-                  {discount.isProfitable ? "Opłacalny" : "Nieopłacalny"}
+                  {discount.isProfitable ? t("dashboard.status.profitable") : t("dashboard.status.unprofitable")}
                 </s-badge>
               </s-row>
             ))}
           </s-data-table>
         ) : (
-          <s-empty-state heading="Brak danych o rabatach">
-            <s-paragraph>
-              Kliknij "Synchronizuj dane" aby pobrać historię rabatów z Twojego sklepu.
-            </s-paragraph>
-          </s-empty-state>
+          <div className="sda-empty">
+            <span className="sda-empty-icon" aria-hidden>📉</span>
+            <p className="sda-empty-title">{t("dashboard.empty.noDiscounts")}</p>
+            <p className="sda-empty-desc">
+              {t("dashboard.empty.syncFirst")}
+            </p>
+          </div>
         )}
       </s-section>
 
-      {/* Recommendations Section */}
-      <s-section slot="aside" heading="Rekomendacje">
+      <s-section slot="aside" heading={t("dashboard.sectionRecommendations")}>
         {recommendations.length > 0 ? (
           <s-stack gap="base">
             {recommendations.map((rec) => (
-              <s-card key={rec.id}>
+              <div key={rec.id} className={`sda-rec-card ${rec.recommendationType}`}>
+              <s-card>
                 <s-stack gap="tight">
                   <s-text variant="headingSm">{rec.productTitle}</s-text>
                   <s-badge tone={
@@ -283,45 +276,53 @@ export default function Dashboard() {
                       rec.recommendationType === "avoid" ? "critical" :
                         rec.recommendationType === "decrease" ? "warning" : "info"
                   }>
-                    {rec.recommendationType === "increase" && "Zwiększ rabat"}
-                    {rec.recommendationType === "decrease" && "Zmniejsz rabat"}
-                    {rec.recommendationType === "avoid" && "Unikaj rabatów"}
-                    {rec.recommendationType === "maintain" && "Utrzymaj"}
+                    {t("recType." + rec.recommendationType)}
                   </s-badge>
-                  {rec.suggestedDiscountPercent && (
+                  {rec.suggestedDiscountPercent != null && (
                     <s-text variant="bodySm">
-                      Sugerowany rabat: {rec.suggestedDiscountPercent}%
+                      {t("dashboard.rec.suggestedDiscount")}: {rec.suggestedDiscountPercent}%
                     </s-text>
                   )}
-                  {rec.reasoning && (
-                    <s-text variant="bodySm" tone="subdued">
-                      {rec.reasoning}
-                    </s-text>
+                  {(rec.reasoningKey || rec.reasoning) && (
+                    <s-stack gap="none">
+                      <s-text variant="bodySm" fontWeight="semibold" tone="subdued">{t("dashboard.rec.why")}:</s-text>
+                      <s-text variant="bodySm" tone="subdued">
+                        {rec.reasoningKey ? t("reasoning." + rec.reasoningKey) : rec.reasoning}
+                      </s-text>
+                    </s-stack>
                   )}
                 </s-stack>
               </s-card>
+              </div>
             ))}
           </s-stack>
         ) : (
-          <s-paragraph tone="subdued">
-            Rekomendacje pojawią się po pierwszej synchronizacji danych.
-          </s-paragraph>
+          <div className="sda-empty">
+            <span className="sda-empty-icon" aria-hidden>💡</span>
+            <p className="sda-empty-title">{t("dashboard.empty.noRecommendations")}</p>
+            <p className="sda-empty-desc">
+              {t("dashboard.empty.goGenerate")}
+            </p>
+            <a href="/app/recommendations" className="sda-cta-secondary">{t("dashboard.generateRecommendations")}</a>
+          </div>
         )}
       </s-section>
 
-      {/* Navigation Links */}
-      <s-section slot="aside" heading="Nawigacja">
-        <s-unordered-list>
-          <s-list-item>
-            <s-link href="/app/discounts">Historia rabatów</s-link>
-          </s-list-item>
-          <s-list-item>
-            <s-link href="/app/recommendations">Rekomendacje produktowe</s-link>
-          </s-list-item>
-          <s-list-item>
-            <s-link href="/app/settings">Ustawienia</s-link>
-          </s-list-item>
-        </s-unordered-list>
+      <s-section slot="aside" heading={t("dashboard.quickActions")}>
+        <div className="sda-nav-cards">
+          <a href="/app/discounts" className="sda-nav-card">
+            <span className="sda-nav-card-icon" aria-hidden>📊</span>
+            {t("dashboard.quick.discounts")}
+          </a>
+          <a href="/app/recommendations" className="sda-nav-card">
+            <span className="sda-nav-card-icon" aria-hidden>✨</span>
+            {t("dashboard.quick.recommendations")}
+          </a>
+          <a href="/app/settings" className="sda-nav-card">
+            <span className="sda-nav-card-icon" aria-hidden>⚙️</span>
+            {t("dashboard.quick.settings")}
+          </a>
+        </div>
       </s-section>
     </s-page>
   );

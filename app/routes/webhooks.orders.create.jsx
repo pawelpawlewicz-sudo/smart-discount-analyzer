@@ -3,9 +3,9 @@
  * Triggered when a new order is created in Shopify
  */
 
-import { authenticate } from "../../shopify.server";
-import prisma from "../../db.server";
-import { analyzeDiscountPerformance } from "../../services/discount-analyzer";
+import { authenticate } from "../shopify.server";
+import prisma from "../db.server";
+import { analyzeDiscountPerformance } from "../services/discount-analyzer";
 
 export const action = async ({ request }) => {
     const { topic, shop, payload } = await authenticate.webhook(request);
