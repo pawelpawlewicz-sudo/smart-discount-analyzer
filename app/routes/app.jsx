@@ -6,21 +6,26 @@ import prisma from "../db.server";
 import { getTForLocale } from "../i18n/translations";
 
 export const loader = async ({ request }) => {
-  const { billing, session } = await authenticate.admin(request);
-  const isTest = process.env.NODE_ENV !== "production";
-  await billing.require({
-    plans: [MONTHLY_PLAN],
-    isTest,
-    onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest }),
-  });
-  const shop = await prisma.shop.findUnique({
-    where: { shopDomain: session.shop },
-  });
-  const locale = shop?.locale ?? "en";
-  return {
-    apiKey: process.env.SHOPIFY_API_KEY || "",
-    locale,
-  };
+  try {
+    const { billing, session } = await authenticate.admin(request);
+    const isTest = process.env.NODE_ENV !== "production";
+    await billing.require({
+      plans: [MONTHLY_PLAN],
+      isTest,
+      onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest }),
+    });
+    const shop = await prisma.shop.findUnique({
+      where: { shopDomain: session.shop },
+    });
+    const locale = shop?.locale ?? "en";
+    return {
+      apiKey: process.env.SHOPIFY_API_KEY || "",
+      locale,
+    };
+  } catch (error) {
+    console.error("[app.jsx loader]", error?.message || error);
+    throw error;
+  }
 };
 
 export default function App() {
