@@ -48,10 +48,10 @@ api_version = "2026-04"
 scopes = "read_orders,read_products,read_discounts,read_price_rules,read_inventory,write_discounts"
 
 [auth]
-# OAuth: base path i callback (Shopify może wymagać URL kończącego na /callback)
+# OAuth: authPathPrefix w kodzie to "/auth" (shopify.server.js), więc redirect to /auth i /auth/callback (NIE /api/auth)
 redirect_urls = [
-  "https://discountintelligence.up.railway.app/api/auth",
-  "https://discountintelligence.up.railway.app/api/auth/callback"
+  "https://discountintelligence.up.railway.app/auth",
+  "https://discountintelligence.up.railway.app/auth/callback"
 ]
 
 

@@ -52,7 +52,7 @@ Brak `SHOPIFY_APP_URL` lub błędna wartość często kończy się crash przy st
 ## 3. Partner Dashboard – App URL i Redirect
 
 - **App URL:** `https://discountintelligence.up.railway.app/app` (z **/app** na końcu).
-- **Allowed redirection URL(s):** `https://discountintelligence.up.railway.app/api/auth`
+- **Allowed redirection URL(s):** `https://discountintelligence.up.railway.app/auth` i `https://discountintelligence.up.railway.app/auth/callback`
 
 Źle ustawione URL-e powodują błędne przekierowania i wrażenie „app nie odpowiada”.
 

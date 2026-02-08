@@ -18,7 +18,7 @@ Po wdrożeniu usługi na Railway:
 Ten adres to **docelowy URL aplikacji**. Użyjesz go jako:
 
 - **App URL** w Shopify Partner Dashboard: `https://TWOJ-ADRES.up.railway.app/app`
-- **Redirect URL(s)** w Dashboard: `https://TWOJ-ADRES.up.railway.app/api/auth` (lub zgodnie z konfiguracją auth w aplikacji)
+- **Redirect URL(s)** w Dashboard: `https://TWOJ-ADRES.up.railway.app/auth` i `https://TWOJ-ADRES.up.railway.app/auth/callback` (authPathPrefix w kodzie to `/auth`)
 - Zmienna środowiskowa **`SHOPIFY_APP_URL`**: `https://TWOJ-ADRES.up.railway.app` (bez `/app` na końcu, jeśli Twoja aplikacja tak tego oczekuje – sprawdź `shopify.server.js`)
 
 Dopóki nie wygenerujesz domeny, usługa nie będzie publicznie dostępna. Po wygenerowaniu domeny **od razu skopiuj ją** i uzupełnij konfigurację w Railway (SHOPIFY_APP_URL) oraz w Partner Dashboard.
@@ -129,7 +129,7 @@ W projekcie jest jedna migracja dla Postgres: `20260207160000_init_postgres`. Tw
 2. **App setup** (lub **Configuration**):
    - **App URL**: `https://TWOJ-ADRES.up.railway.app/app`
    - **Allowed redirection URL(s)**:
-     - `https://TWOJ-ADRES.up.railway.app/api/auth`
+     - `https://TWOJ-ADRES.up.railway.app/auth`, `https://TWOJ-ADRES.up.railway.app/auth/callback`
      - (inne, jeśli wymagane przez auth – sprawdź `authPathPrefix` w kodzie)
 3. Zapisz zmiany.
 
@@ -159,7 +159,7 @@ Potem: `npx prisma migrate deploy` (lub `prisma migrate dev`) i `shopify app dev
 |-------|-----|
 | **Railway – usługa app** | Build: `npm install && npx prisma generate && npm run build`; Start: `npx prisma migrate deploy && npm run start:railway` (lub `npm run start` + Variable **HOST=0.0.0.0**); Variables: `DATABASE_URL`, `SHOPIFY_*`, `SCOPES`, `SHOPIFY_APP_URL`, `NODE_ENV=production`, **HOST=0.0.0.0**. |
 | **Railway – Networking** | Generate Domain → skopiować URL. |
-| **Partner Dashboard** | App URL = `https://...up.railway.app/app`; Redirect = `https://...up.railway.app/api/auth`. |
+| **Partner Dashboard** | App URL = `https://...up.railway.app/app`; Redirect = `https://...up.railway.app/auth` oraz `.../auth/callback`. |
 | **Support email** | W App Listing wpisz swój adres (np. support@twojadomena.pl). |
 | **Polityka prywatności** | Użyj szablonu z `docs/PRIVACY-POLICY-TEMPLATE.md` i wstaw URL w App Listing. |
 

@@ -25,7 +25,7 @@ Gdy masz już URL produkcji:
 
 1. W **Partner Dashboard** → Twoja aplikacja → **App setup** ustaw:
    - **App URL** = `https://TWOJ-DOMEN/app`
-   - **Allowed redirection URL(s)** = np. `https://TWOJ-DOMEN/api/auth` (zgodnie z tym, co zwraca auth w aplikacji).
+   - **Allowed redirection URL(s)** = `https://TWOJ-DOMEN/auth` i `https://TWOJ-DOMEN/auth/callback` (authPathPrefix w tym projekcie to `/auth`).
 
 2. Opcjonalnie w `shopify.app.toml` możesz wpisać ten sam URL (przy `shopify app deploy` część konfiguracji może być nadpisywana z Partner Dashboard).
 
@@ -74,7 +74,7 @@ W [partners.shopify.com](https://partners.shopify.com) → **Apps** → Twoja ap
 W **Partner Dashboard** → **App setup** (lub **Configuration**):
 
 - **App URL**: Twój produkcyjny URL (np. `https://twoja-domena.com/app`).
-- **Redirect URLs**: dokładnie te, które używa Twoja aplikacja (np. `https://twoja-domena.com/api/auth`, `https://twoja-domena.com/auth/callback` – zależnie od `authPathPrefix` w kodzie).
+- **Redirect URLs**: w tym projekcie `authPathPrefix` to `/auth`, więc: `https://twoja-domena.com/auth` i `https://twoja-domena.com/auth/callback`.
 
 Bez poprawnego HTTPS i tych URL-i recenzja się nie powiedzie.
 

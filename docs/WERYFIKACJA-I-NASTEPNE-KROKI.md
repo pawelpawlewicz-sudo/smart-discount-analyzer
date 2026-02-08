@@ -38,7 +38,7 @@ Jeśli cały ten flow przejdzie, **produkcja działa poprawnie**.
 W **Partners** → Twoja aplikacja → **App setup** (lub **Configuration**):
 
 - **App URL**: `https://discountintelligence.up.railway.app/app`
-- **Allowed redirection URL(s)** zawiera: `https://discountintelligence.up.railway.app/api/auth`
+- **Allowed redirection URL(s)** zawiera: `https://discountintelligence.up.railway.app/auth` i `.../auth/callback`
 
 Bez tego OAuth się nie uda.
 
@@ -62,7 +62,7 @@ Recenzja zwykle trwa **2–10 dni**. Często dostaniesz uwagi – poprawiasz i w
 
 - [ ] Railway: deployment **Success**, aplikacja nie crashuje.
 - [ ] Test na sklepie: **Install app** → OAuth → Dashboard → Sync → Recommendations / Discounts działają.
-- [ ] Partner Dashboard: **App URL** = `.../app`, **Redirect** = `.../api/auth`.
+- [ ] Partner Dashboard: **App URL** = `.../app`, **Redirect** = `.../auth` i `.../auth/callback`.
 - [ ] App listing: nazwa, opis, min. 1 zrzut, **Support email**, **Privacy policy URL**.
 - [ ] Polityka prywatności dostępna pod podanym URL (np. `/privacy.html`).
 
