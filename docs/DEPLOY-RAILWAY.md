@@ -48,8 +48,8 @@ Dopóki nie wygenerujesz domeny, usługa nie będzie publicznie dostępna. Po wy
 3. Po połączeniu repo Railway wykryje projekt (Node/npm). Ustaw **Root Directory** na katalog z `package.json` (zazwyczaj katalog główny repo).
 4. **Settings** tej usługi:
    - **Build Command**: `npm install && npx prisma generate && npm run build`
-   - **Start Command**: `npx prisma migrate deploy && npm run start`  
-     (najpierw migracje, potem start serwera)
+   - **Start Command**: `npx prisma migrate deploy && npm run start:railway`  
+     (albo `npm run setup && npm run start` **oraz** w Variables dodaj **`HOST`** = **`0.0.0.0`** – serwer musi nasłuchiwać na wszystkich interfejsach, inaczej Railway zwróci 502)
    - **Watch Paths**: zostaw domyślne (np. całe repo), żeby push do repo uruchamiał nowy deploy.
 
 ---
@@ -75,6 +75,8 @@ Pozostałe zmienne w tej samej usłudze aplikacji:
 | `SCOPES` | Uprawnienia (po przecinku) | `read_orders,read_products,read_discounts,read_price_rules,read_inventory,write_discounts` |
 | `SHOPIFY_APP_URL` | **URL Twojej aplikacji** (bez ścieżki `/app`) | Po wygenerowaniu domeny: `https://twoja-usługa-xxx.up.railway.app` |
 | `NODE_ENV` | Środowisko | `production` |
+| `HOST` | Adres nasłuchu (ważne przy 502) | **`0.0.0.0`** – bez tego Railway nie połączy się z aplikacją i zwróci 502. |
+| `PORT` | Port nasłuchu | Tylko jeśli w **Networking** masz ustawiony Port (np. 3000) – wtedy ustaw **`PORT`** = **`3000`**, żeby aplikacja słuchała na tym samym porcie co proxy. Po zmianie Variables kliknij **Deploy**. |
 
 **SHOPIFY_APP_URL jest wymagane do startu aplikacji** – bez niego serwer się wywali z błędem „Detected an empty appUrl configuration”. Najpierw wygeneruj domenę (krok 6), skopiuj URL i dodaj go jako `SHOPIFY_APP_URL`. Jeśli domeny jeszcze nie ma, możesz tymczasowo ustawić `https://placeholder.up.railway.app`, potem po **Generate Domain** podmienić na prawdziwy adres i zrobić Redeploy.
 
@@ -89,6 +91,18 @@ Pozostałe zmienne w tej samej usłudze aplikacji:
 5. (Opcjonalnie) **Redeploy** usługi, żeby nowa wartość `SHOPIFY_APP_URL` była użyta.
 
 Ten adres to **docelowy URL aplikacji** – użyj go w Partner Dashboard jak w rozdziale 1.
+
+---
+
+## 6b. Konflikt portów (Networking vs aplikacja)
+
+Railway w **Settings → Networking** może mieć ustawiony **Port** (np. **3000**). Proxy wysyła wtedy ruch na ten port. Aplikacja (`react-router-serve`) nasłuchuje na porcie z zmiennej **PORT** – jeśli Railway jej nie nadaje, domyślnie będzie to np. 8080.
+
+**Jeśli w Networking masz Port 3000, a aplikacja słucha na 8080** – dostaniesz 502 lub „strona nie istnieje”.
+
+**Rozwiązanie:** W **Variables** usługi aplikacji dodaj zmienną **`PORT`** z wartością **`3000`** (tę samą co w Networking). Po zapisaniu **kliknij Deploy** (żółty przycisk), żeby nowy deploy uruchomił się z PORT=3000.
+
+Jeśli w Networking nie ustawiasz portu ręcznie, Railway zwykle wstrzykuje **PORT** automatycznie i proxy jest dopasowany – wtedy **nie** ustawiaj PORT w Variables.
 
 ---
 
@@ -141,7 +155,7 @@ Potem: `npx prisma migrate deploy` (lub `prisma migrate dev`) i `shopify app dev
 
 | Gdzie | Co |
 |-------|-----|
-| **Railway – usługa app** | Build: `npm install && npx prisma generate && npm run build`; Start: `npx prisma migrate deploy && npm run start`; Variables: `DATABASE_URL` (referencja), `SHOPIFY_*`, `SCOPES`, `SHOPIFY_APP_URL`, `NODE_ENV=production`. |
+| **Railway – usługa app** | Build: `npm install && npx prisma generate && npm run build`; Start: `npx prisma migrate deploy && npm run start:railway` (lub `npm run start` + Variable **HOST=0.0.0.0**); Variables: `DATABASE_URL`, `SHOPIFY_*`, `SCOPES`, `SHOPIFY_APP_URL`, `NODE_ENV=production`, **HOST=0.0.0.0**. |
 | **Railway – Networking** | Generate Domain → skopiować URL. |
 | **Partner Dashboard** | App URL = `https://...up.railway.app/app`; Redirect = `https://...up.railway.app/api/auth`. |
 | **Support email** | W App Listing wpisz swój adres (np. support@twojadomena.pl). |

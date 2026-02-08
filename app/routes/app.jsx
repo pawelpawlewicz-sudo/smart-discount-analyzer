@@ -9,11 +9,17 @@ export const loader = async ({ request }) => {
   try {
     const { billing, session } = await authenticate.admin(request);
     const isTest = process.env.NODE_ENV !== "production";
-    await billing.require({
-      plans: [MONTHLY_PLAN],
-      isTest,
-      onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest }),
-    });
+    try {
+      await billing.require({
+        plans: [MONTHLY_PLAN],
+        isTest,
+        onFailure: async () => billing.request({ plan: MONTHLY_PLAN, isTest }),
+      });
+    } catch (billingError) {
+      console.error("[app.jsx loader] Billing error:", billingError?.message || billingError);
+      if (billingError?.stack) console.error("[app.jsx loader] Billing stack:", billingError.stack);
+      // Continue so app loads; merchant may see billing prompt or retry
+    }
     const shop = await prisma.shop.findUnique({
       where: { shopDomain: session.shop },
     });
@@ -23,7 +29,8 @@ export const loader = async ({ request }) => {
       locale,
     };
   } catch (error) {
-    console.error("[app.jsx loader]", error?.message || error);
+    console.error("[app.jsx loader] Error:", error?.message || String(error));
+    if (error?.stack) console.error("[app.jsx loader] Stack:", error.stack);
     throw error;
   }
 };

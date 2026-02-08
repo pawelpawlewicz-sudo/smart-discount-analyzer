@@ -41,10 +41,16 @@ type Pages = {
   "/auth/login": {
     params: {};
   };
+  "/diagnostic": {
+    params: {};
+  };
   "/auth/*": {
     params: {
       "*": string;
     };
+  };
+  "/health": {
+    params: {};
   };
   "/app": {
     params: {};
@@ -72,7 +78,7 @@ type Pages = {
 type RouteFiles = {
   "root.jsx": {
     id: "root";
-    page: "/" | "/webhooks/compliance/customers/data_request" | "/webhooks/compliance/customers/redact" | "/webhooks/compliance/shop/redact" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/webhooks/products/update" | "/webhooks/orders/updated" | "/webhooks/orders/create" | "/auth/login" | "/auth/*" | "/app" | "/app/recommendations" | "/app/recommendations/export" | "/app/additional" | "/app/discounts" | "/app/discounts/export" | "/app/settings";
+    page: "/" | "/webhooks/compliance/customers/data_request" | "/webhooks/compliance/customers/redact" | "/webhooks/compliance/shop/redact" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/webhooks/products/update" | "/webhooks/orders/updated" | "/webhooks/orders/create" | "/auth/login" | "/diagnostic" | "/auth/*" | "/health" | "/app" | "/app/recommendations" | "/app/recommendations/export" | "/app/additional" | "/app/discounts" | "/app/discounts/export" | "/app/settings";
   };
   "routes/webhooks.compliance.customers.data_request.jsx": {
     id: "routes/webhooks.compliance.customers.data_request";
@@ -110,6 +116,10 @@ type RouteFiles = {
     id: "routes/auth.login";
     page: "/auth/login";
   };
+  "routes/diagnostic.jsx": {
+    id: "routes/diagnostic";
+    page: "/diagnostic";
+  };
   "routes/_index/route.jsx": {
     id: "routes/_index";
     page: "/";
@@ -117,6 +127,10 @@ type RouteFiles = {
   "routes/auth.$.jsx": {
     id: "routes/auth.$";
     page: "/auth/*";
+  };
+  "routes/health.jsx": {
+    id: "routes/health";
+    page: "/health";
   };
   "routes/app.jsx": {
     id: "routes/app";
@@ -163,8 +177,10 @@ type RouteModules = {
   "routes/webhooks.orders.updated": typeof import("./app/routes/webhooks.orders.updated.jsx");
   "routes/webhooks.orders.create": typeof import("./app/routes/webhooks.orders.create.jsx");
   "routes/auth.login": typeof import("./app/routes/auth.login/route.jsx");
+  "routes/diagnostic": typeof import("./app/routes/diagnostic.jsx");
   "routes/_index": typeof import("./app/routes/_index/route.jsx");
   "routes/auth.$": typeof import("./app/routes/auth.$.jsx");
+  "routes/health": typeof import("./app/routes/health.jsx");
   "routes/app": typeof import("./app/routes/app.jsx");
   "routes/app.recommendations": typeof import("./app/routes/app.recommendations.jsx");
   "routes/app.recommendations.export": typeof import("./app/routes/app.recommendations.export.jsx");
