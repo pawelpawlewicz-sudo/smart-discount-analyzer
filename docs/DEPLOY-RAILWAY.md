@@ -56,18 +56,27 @@ Dopóki nie wygenerujesz domeny, usługa nie będzie publicznie dostępna. Po wy
 
 ## 5. Zmienne środowiskowe (Variables)
 
-W usłudze aplikacji (nie w bazie) dodaj zmienne:
+**WAŻNE:** Bez zmiennej `DATABASE_URL` w usłudze aplikacji deploy się **wywali** (błąd Prisma: „Environment variable not found: DATABASE_URL”). Ta zmienna jest w usłudze PostgreSQL – musisz ją **dodać do usługi aplikacji** (referencja lub wklejenie).
+
+W usłudze **smart-discount-analyzer** (aplikacja, nie baza) → **Variables** → **+ New Variable**:
+
+1. **DATABASE_URL** – **obowiązkowe.**  
+   - Opcja A: **Add Variable** → **Add reference** (lub „Reference”) → wybierz usługę **PostgreSQL** → z listy zmiennych wybierz **`DATABASE_URL`**.  
+   - Opcja B: W usłudze PostgreSQL → Variables skopiuj wartość `DATABASE_URL` i w usłudze aplikacji dodaj zmienną `DATABASE_URL` z wklejonym connection stringiem.  
+   Po zapisaniu zrób **Redeploy** usługi aplikacji.
+
+Pozostałe zmienne w tej samej usłudze aplikacji:
 
 | Zmienna | Opis | Przykład |
 |--------|------|----------|
-| `DATABASE_URL` | Adres PostgreSQL | Ustaw przez **Add variable** → **Add reference** i wybierz zmienną `DATABASE_URL` z usługi PostgreSQL (Railway wtedy wstrzyknie aktualną wartość). |
+| `DATABASE_URL` | Adres PostgreSQL (patrz wyżej) | Referencja z usługi PostgreSQL lub wklejony connection string. |
 | `SHOPIFY_API_KEY` | Z Partner Dashboard → App → Client credentials | Wklej API Key |
 | `SHOPIFY_API_SECRET` | To samo miejsce | Wklej API Secret |
 | `SCOPES` | Uprawnienia (po przecinku) | `read_orders,read_products,read_discounts,read_price_rules,read_inventory,write_discounts` |
 | `SHOPIFY_APP_URL` | **URL Twojej aplikacji** (bez ścieżki `/app`) | Po wygenerowaniu domeny: `https://twoja-usługa-xxx.up.railway.app` |
 | `NODE_ENV` | Środowisko | `production` |
 
-`SHOPIFY_APP_URL` ustaw **dopiero po** wygenerowaniu domeny (krok 6). Do pierwszego deployu możesz wpisać tymczasowo `https://placeholder.up.railway.app` i zaktualizować po wygenerowaniu prawdziwego URL.
+**SHOPIFY_APP_URL jest wymagane do startu aplikacji** – bez niego serwer się wywali z błędem „Detected an empty appUrl configuration”. Najpierw wygeneruj domenę (krok 6), skopiuj URL i dodaj go jako `SHOPIFY_APP_URL`. Jeśli domeny jeszcze nie ma, możesz tymczasowo ustawić `https://placeholder.up.railway.app`, potem po **Generate Domain** podmienić na prawdziwy adres i zrobić Redeploy.
 
 ---
 

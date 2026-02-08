@@ -2,7 +2,7 @@
 
 client_id = "24b5ceb6e01a494cc412424ae447790f"
 name = "smart-discount-analyzer"
-application_url = "https://example.com"
+application_url = "https://discountintelligence.up.railway.app"
 embedded = true
 
 [build]
@@ -48,6 +48,6 @@ api_version = "2026-04"
 scopes = "read_orders,read_products,read_discounts,read_price_rules,read_inventory,write_discounts"
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [ "https://discountintelligence.up.railway.app/api/auth" ]
 
 
