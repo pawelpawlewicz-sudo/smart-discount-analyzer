@@ -29,6 +29,8 @@ export const loader = async ({ request }) => {
       locale,
     };
   } catch (error) {
+    // Don't log redirects (Response) from Shopify auth – they are expected
+    if (error instanceof Response) throw error;
     console.error("[app.jsx loader] Error:", error?.message || String(error));
     if (error?.stack) console.error("[app.jsx loader] Stack:", error.stack);
     throw error;

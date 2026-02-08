@@ -104,6 +104,8 @@ Railway w **Settings → Networking** może mieć ustawiony **Port** (np. **3000
 
 Jeśli w Networking nie ustawiasz portu ręcznie, Railway zwykle wstrzykuje **PORT** automatycznie i proxy jest dopasowany – wtedy **nie** ustawiaj PORT w Variables.
 
+**Uwaga (EADDRNOTAVAIL):** Jeśli w logach widzisz `Error: listen EADDRNOTAVAIL: address not available 66.x.x.x:3000`, Railway ustawia **HOST** na zewnętrzny IP. Serwer musi nasłuchiwać na **0.0.0.0**. W projekcie skrypt `start` już ustawia `HOST=0.0.0.0` – upewnij się, że w **Start Command** jest `npm run setup && npm run start` (lub `npm run start:railway`). Jeśli w **Variables** masz zmienną **HOST** ustawioną na cokolwiek innego niż **0.0.0.0** – **usuń ją** albo ustaw na **0.0.0.0**.
+
 ---
 
 ## 7. Migracje Prisma (PostgreSQL)
